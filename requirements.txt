@@ -1,0 +1,7 @@
+transformers
+accelerate
+bitsandbytes
+openai
+huggingface_hub
+datasets
+pandas
