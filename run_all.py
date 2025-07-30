@@ -1,47 +1,69 @@
 import sys
+import os
+import csv
+from datetime import datetime
+
 exec(open("setup_path.py").read())
+from utils.self_consistency_utils import majority_vote
+from utils.evaluation import evaluate_local_model
+from utils.extraction import extract_answer_number
+from models.llama2_loader import load_llama2_quantized
+from models.qwen_loader import load_qwen_quantized
 
-from utils.dataset import download_gsm8k_dataset
 from prompts.zero_shot import zero_shot_prompt
+from prompts.cot import cot_prompt
+from prompts.few_shot import few_shot_prompt
+from prompts.self_consistency import self_consistency_prompt
+from prompts.prolog_style import prolog_prompt
 
-def run_zero_shot(gsm8k, generator, model_name):
-    correct = 0
-    total = len(gsm8k['test'])
+# Register all available strategies
+PROMPT_FUNCTIONS = {
+    "zero_shot": zero_shot_prompt,
+    "cot": cot_prompt,
+    "few_shot": few_shot_prompt,
+    "self_consistency": self_consistency_prompt,
+    "prolog": prolog_prompt
+}
 
-    print(f"\nRunning Zero-Shot Inference on {total} GSM8K test problems using {model_name}...\n")
+# Register model loaders
+MODEL_LOADERS = {
+    "llama": load_llama2_quantized,
+    "qwen": load_qwen_quantized
+}
 
-    for i, sample in enumerate(gsm8k['test'][:5]):  # Limit to 5 for demo
-        question = sample['question']
-        answer = sample['answer']
+def run_all(model_name: str, sample_size: int = 20):
+    if model_name not in MODEL_LOADERS:
+        raise ValueError(f"Unsupported model: {model_name}. Choose from {list(MODEL_LOADERS)}")
 
-        prompt = zero_shot_prompt(question)
-        output = generator(prompt)[0]['generated_text']
-        predicted = output.split("Answer:")[-1].strip()
+    generator = MODEL_LOADERS[model_name]()
+    all_results = []
 
-        print(f"Q{i+1}: {question}")
-        print(f"Expected: {answer}")
-        print(f"Generated: {predicted}")
-        print("-" * 50)
+    for strategy_name, prompt_fn in PROMPT_FUNCTIONS.items():
+        print(f"\n Running {strategy_name.replace('_', ' ').title()} on {model_name.upper()} ({sample_size} samples)")
+        
+        df = evaluate_local_model(
+            model_name=model_name,
+            generator=generator,
+            strategy_name=strategy_name,
+            prompt_fn=prompt_fn,
+            num_problems=sample_size,
+            log_incorrect=True
+        )
+        all_results.extend(df.to_dict("records"))
 
-    print(f"\nZero-shot inference complete with {model_name}.")
+    # Save results to CSV
+    os.makedirs("results", exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"results/results_{model_name}_{sample_size}_{timestamp}.csv"
 
-def load_model(model_name):
-    if model_name.lower() == "llama":
-        from models.llama2_loader import load_llama2_quantized
-        return load_llama2_quantized()
-    elif model_name.lower() == "qwen":
-        from models.qwen_loader import load_qwen_quantized
-        return load_qwen_quantized()
-    else:
-        raise ValueError(f"Unsupported model: {model_name}. Use 'llama' or 'qwen'.")
+    with open(filename, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["model", "strategy", "question", "correct_answer", "predicted_answer", "correct", "time_taken"])
+        writer.writeheader()
+        writer.writerows(all_results)
+
+    print(f"\n Final results saved to {filename}")
 
 if __name__ == "__main__":
-    model_name = sys.argv[1] if len(sys.argv) > 1 else "llama"
-
-    gsm8k = download_gsm8k_dataset()
-    if gsm8k is None:
-        print("Dataset download failed.")
-        exit()
-
-    generator = load_model(model_name)
-    run_zero_shot(gsm8k, generator, model_name)
+    model = sys.argv[1] if len(sys.argv) > 1 else "llama"
+    sample_size = int(sys.argv[2]) if len(sys.argv) > 2 else 20
+    run_all(model.lower(), sample_size)

@@ -1,30 +1,60 @@
-from prompts.zero_shot import zero_shot_prompt
-from models.gpt4_loader import query_gpt4
+from utils.self_consistency_utils import majority_vote
 from utils.extraction import extract_answer_number
-from datasets import load_dataset
+from utils.dataset import download_gsm8k_dataset
 import pandas as pd
 import time
+import random
+import os
 
-def evaluate_strategy(strategy_name, prompt_fn, num_problems=5):
-    dataset = load_dataset("gsm8k", "main")["test"]
+def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_problems=5, log_incorrect=True):
+    print(f"\nEvaluating {model_name.upper()} on {num_problems} randomly selected GSM8K problems with strategy: {strategy_name}")
+
+    dataset = download_gsm8k_dataset()["test"]
+    samples = random.sample(list(dataset), num_problems)
     results = []
 
-    for i in range(num_problems):
-        question = dataset[i]["question"]
-        correct = extract_answer_number(dataset[i]["answer"])
-        prompt = prompt_fn(question)
-        start = time.time()
-        response = query_gpt4(prompt)
-        prediction = extract_answer_number(response)
-        duration = round(time.time() - start, 2)
+    if log_incorrect:
+        os.makedirs("results", exist_ok=True)
+        incorrect_log_path = f"results/{model_name}_incorrect_{strategy_name}.txt"
+        open(incorrect_log_path, "w").close()  # clear previous
 
+    for i, sample in enumerate(samples):
+        question = sample["question"]
+        correct = extract_answer_number(sample["answer"])
+        prompt = prompt_fn(question)
+
+        start = time.time()
+        response = generator(prompt, max_new_tokens=150, temperature=0.1)[0]["generated_text"]
+        duration = round(time.time() - start, 2)
+        prediction = extract_answer_number(response)
+
+        #  Debug logging
+        print(f"\nQ{i+1}: {question}")
+        print(f"Prompt:\n{prompt}")
+        print(f"Model Output:\n{response.strip()}")
+        print(f"Correct Answer: {correct}")
+        print(f"Predicted Answer: {prediction}")
+        print(f" Time Taken: {duration} sec")
+        print("-" * 80)
+
+        is_correct = prediction == correct
         results.append({
+            "model": model_name,
             "strategy": strategy_name,
             "question": question,
             "correct_answer": correct,
             "predicted_answer": prediction,
-            "correct": prediction == correct,
+            "correct": is_correct,
             "time_taken": duration
         })
+
+        #  Optional: Log incorrect
+        if log_incorrect and not is_correct:
+            with open(incorrect_log_path, "a") as f:
+                f.write(f"\nQ{i+1}: {question}\n")
+                f.write(f"Prompt:\n{prompt}\n")
+                f.write(f"Correct: {correct}, Predicted: {prediction}\n")
+                f.write(f"Response:\n{response}\n")
+                f.write("-" * 80 + "\n")
 
     return pd.DataFrame(results)

@@ -30,7 +30,7 @@ def load_llama2_quantized():
         model=model,
         tokenizer=tokenizer,
         max_new_tokens=200,
-        temperature=0.1,
+        temperature=0.7,
         do_sample=True,
         pad_token_id=tokenizer.eos_token_id
     )
