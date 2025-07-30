@@ -32,8 +32,12 @@ prompt-eng-llm-gsm8k/
 │   ├── dataset.py
 │   └── evaluation.py
 │
-├── test_model.py             # Basic LLaMA-2 functionality test
+├── test/                     # Model tests
+│   ├── test_llama.py
+│   └── test_qwen.py
+│
 ├── setup_env.py              # Hugging Face authentication setup
+├── setup_path.py             # Root path setup for sys.path
 ├── run_all.py                # Evaluate selected strategies
 ├── requirements.txt          # Dependencies
 └── README.md
@@ -41,33 +45,18 @@ prompt-eng-llm-gsm8k/
 
 ## Current Capabilities
 
--  Zero-shot prompt strategy implemented
--  LLaMA-2 quantized loading and testing
--  Hugging Face token setup via `setup_env.py` and Colab secrets
--  Clean folder structure with modular model loaders
--  Requirements file for easy setup
+- ✅ Zero-shot prompt strategy implemented
+- ✅ LLaMA-2 and Qwen model loading and testing (quantized)
+- ✅ Hugging Face token setup via `setup_env.py` and Colab secrets
+- ✅ Clean folder structure with modular model loaders
+- ✅ Requirements file for easy setup
 
-## Model Setup and Testing (LLaMA-2)
-
-To test LLaMA-2-7B-chat-hf using quantization:
+## Installation
 
 ```bash
-pip install -r requirements.txt
-python setup_path.py
-python setup_env.py
-```
-
-Then in Python:
-
-```python
-from models.llama2_loader import load_llama2_quantized
-llama_generator = load_llama2_quantized()
-```
-
-To run a basic math prompt test:
-
-```bash
-python test_model.py
+!git clone https://github.com/Meenatchisundari/prompt-eng-llm-gsm8k.git
+%cd prompt-eng-llm-gsm8k
+!pip install -r requirements.txt
 ```
 
 ## Hugging Face Authentication
@@ -82,23 +71,76 @@ This makes the project usable in:
 - Local Jupyter/VS Code
 - Terminal/CLI environments
 
-## Installation
+## Path Setup
+
+To ensure internal modules import correctly, run this at the top of your notebook or script:
+
+```python
+exec(open("setup_path.py").read())
+```
+
+## Model Setup and Testing (LLaMA-2)
+
+To test LLaMA-2-7B-chat-hf using quantization:
 
 ```bash
-git clone https://github.com/Meenatchisundari/prompt-eng-llm-gsm8k.git
-cd prompt-eng-llm-gsm8k
-pip install -r requirements.txt
+!python setup_path.py
+!python setup_env.py
 ```
+
+Then in Python:
+
+```python
+from models.llama2_loader import load_llama2_quantized
+llama_generator = load_llama2_quantized()
+```
+
+Or run the test file:
+
+```bash
+!python test/test_llama.py
+```
+
+## Qwen Model Setup and Testing
+
+To test Qwen2.5-7B-chat using quantization:
+
+```bash
+!python setup_path.py
+!python setup_env.py
+```
+
+Then in Python:
+
+```python
+from models.qwen_loader import load_qwen_quantized
+qwen_generator = load_qwen_quantized()
+```
+
+Or run the test file:
+
+```bash
+!python test/test_qwen.py
+```
+
+## Unified Strategy Evaluation (run_all.py)
+
+To evaluate zero-shot prompts using either model:
+
+```bash
+!python3 run_all.py llama   # for LLaMA-2
+!python3 run_all.py qwen    # for Qwen2.5
+```
+
+> The script will load the model, run zero-shot inference on GSM8K samples, and print predictions.
 
 ## Next Steps
 
-- [ ] Add Qwen model loader and test
 - [ ] Integrate GPT-4 strategy
 - [ ] Add Chain-of-Thought, Few-shot, and Prolog prompts
-- [ ] Evaluate and compare all strategies via `run_all.py`
+- [x] Evaluate and compare all strategies via `run_all.py`
 
 ---
 
 **Author**: Meenatchi Sundari  
 **License**: MIT
-
