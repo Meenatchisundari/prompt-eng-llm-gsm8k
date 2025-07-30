@@ -1,4 +1,4 @@
-
+exec(open("setup_path.py").read())
 from models.llama2_loader import load_llama2_quantized
 
 def test_llama_model_basic_functionality(text_generator):
