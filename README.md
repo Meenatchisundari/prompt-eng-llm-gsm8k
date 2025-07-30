@@ -53,6 +53,7 @@ To test LLaMA-2-7B-chat-hf using quantization:
 
 ```bash
 pip install -r requirements.txt
+python setup_path.py
 python setup_env.py
 ```
 
