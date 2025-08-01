@@ -17,10 +17,10 @@ def load_qwen_quantized():
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     
     if tokenizer.pad_token is None:
-    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
     if tokenizer.eos_token is None:
-    tokenizer.eos_token = tokenizer.pad_token 
+        tokenizer.eos_token = tokenizer.pad_token 
 
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
