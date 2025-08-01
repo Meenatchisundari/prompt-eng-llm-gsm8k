@@ -76,6 +76,8 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
                 f.write("-" * 80 + "\n")
 
     return pd.DataFrame(results)'''
+
+
 from utils.self_consistency_utils import majority_vote
 from utils.extraction import extract_answer_number
 from utils.dataset import download_gsm8k_dataset
@@ -89,10 +91,21 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
     
     model, tokenizer = generator
     
-    # CRITICAL FIX: Set padding token here in the evaluation function
+    # CRITICAL FIX: Multiple approaches to set padding token
+    print(f"[{strategy_name}] Tokenizer pad_token before: {tokenizer.pad_token}")
+    print(f"[{strategy_name}] Tokenizer eos_token: {tokenizer.eos_token}")
+    
+    # Method 1: Direct assignment
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-        print(f"[{strategy_name}] Set pad_token to eos_token")
+    
+    # Method 2: Add special tokens if direct assignment doesn't work
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        model.resize_token_embeddings(len(tokenizer))
+        print(f"[{strategy_name}] Added custom [PAD] token")
+    
+    print(f"[{strategy_name}] Tokenizer pad_token after: {tokenizer.pad_token}")
     
     dataset = download_gsm8k_dataset()["test"]
     samples = random.sample(list(dataset), num_problems)
@@ -109,11 +122,13 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
         prompt = prompt_fn(question)
         start = time.time()
         
-        # Double-check padding token is set (defensive programming)
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
-            
-        inputs = tokenizer(prompt, return_tensors="pt", padding=True).to(model.device)
+        # Alternative approach: Don't use padding for single sequences
+        try:
+            inputs = tokenizer(prompt, return_tensors="pt", padding=True).to(model.device)
+        except ValueError as e:
+            print(f"[{strategy_name}] Padding failed, trying without padding: {e}")
+            # Try without padding (should work for single sequences)
+            inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
         outputs = model.generate(
             input_ids=inputs["input_ids"],
             attention_mask=inputs["attention_mask"],
