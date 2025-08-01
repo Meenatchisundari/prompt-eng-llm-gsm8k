@@ -3,10 +3,10 @@ import re
 def extract_answer_number(text):
     # Match patterns like '#### 42', 'Answer: 42', 'The answer is 42', etc.
     patterns = [
-        r"####\s*([+-]?\d+(?:\.\d+)?)",
-        r"[Aa]nswer[:\-]?\s*\$?([+-]?\d+(?:\.\d+)?)",
-        r"[Tt]he answer is\s*\$?([+-]?\d+(?:\.\d+)?)",
-        r"=\s*\$?([+-]?\d+(?:\.\d+)?)"
+        r'(?i)the answer is\s*[:\-]?\s*\$?([+-]?\d+(?:\.\d+)?)',
+        r'(?i)answer\s*[:\-]?\s*\$?([+-]?\d+(?:\.\d+)?)',
+        r'(?i)=\s*\$?([+-]?\d+(?:\.\d+)?)',
+        r'####\s*\$?([+-]?\d+(?:\.\d+)?)',
     ]
 
     for pattern in patterns:
