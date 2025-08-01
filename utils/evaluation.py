@@ -29,19 +29,21 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
 
         start = time.time()
 
-        inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+        inputs = tokenizer(prompt, return_tensors="pt" ,padding =True).to(model.device)
         outputs = model.generate(
             input_ids=inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
             max_new_tokens=150,
             temperature=0.1,
             do_sample=False
         )
         
-        response = generator(prompt, max_new_tokens=150, temperature=0.1)[0]["generated_text"]
+        #response = generator(prompt, max_new_tokens=150, temperature=0.1)[0]["generated_text"]
+        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         duration = round(time.time() - start, 2)
         prediction = extract_answer_number(response)
 
-        #  Debug logging
+        # logging
         print(f"\nQ{i+1}: {question}")
         print(f"Prompt:\n{prompt}")
         print(f"Model Output:\n{response.strip()}")
