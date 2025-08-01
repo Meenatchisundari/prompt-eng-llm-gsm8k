@@ -26,6 +26,18 @@ def load_qwen_quantized():
         trust_remote_code=True
     )
 
+    # ---- Patch to fix 'past_key_values' crash in Qwen ----
+    original_forward = model.forward
+
+    def patched_forward(*args, **kwargs):
+        if 'past_key_values' in kwargs and kwargs['past_key_values'] is None:
+            kwargs.pop('past_key_values')
+        return original_forward(*args, **kwargs)
+
+    model.forward = patched_forward
+    # ------------------------------------------------------
+
+
     generator = pipeline(
         "text-generation",
         model=model,
