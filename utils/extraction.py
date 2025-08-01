@@ -1,7 +1,7 @@
 import re
 
 def extract_answer_number(text):
-    # Match patterns like '#### 42', 'Answer: 42', 'The answer is 42', etc.
+    
     patterns = [
         r'(?i)the answer is\s*[:\-]?\s*\$?([+-]?\d+(?:\.\d+)?)',
         r'(?i)answer\s*[:\-]?\s*\$?([+-]?\d+(?:\.\d+)?)',
