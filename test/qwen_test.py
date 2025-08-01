@@ -9,10 +9,23 @@ def test_qwen_model_basic_functionality(text_generator):
     test_prompt = """<|im_start|>system\nYou are a helpful math tutor.<|im_end|>\n<|im_start|>user\nSolve: What is 15 + 27? Show steps.<|im_end|>\n<|im_start|>assistant\n"""
 
     try:
-        response = text_generator(test_prompt)
+        inputs = tokenizer(test_prompt, return_tensors="pt").to(model.device)
+        outputs = model.generate(
+            input_ids=inputs["input_ids"],
+            max_new_tokens=100,
+            temperature=0.1,
+            do_sample=False
+        )
+        decoded = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        reply = decoded.split("<|im_start|>assistant\n")[-1].strip()
+        print("\nModel Response:")
+        print(reply)
+
+        
+        '''response = text_generator(test_prompt)
         output = response[0]['generated_text']
         print("\nModel Response:")
-        print(output)
+        print(output)'''
 
         if "42" in output:
             print("Test Passed: Correct answer found.")
@@ -23,5 +36,7 @@ def test_qwen_model_basic_functionality(text_generator):
         print(f"Test Failed: {e}")
 
 if __name__ == "__main__":
-    generator = load_qwen_quantized()
-    test_qwen_model_basic_functionality(generator)
+    #generator = load_qwen_quantized()
+    model, tokenizer = load_qwen_quantized()
+    test_qwen_model_basic_functionality(model, tokenizer)
+    #test_qwen_model_basic_functionality(generator)
