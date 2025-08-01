@@ -61,7 +61,6 @@ def run_all(model_name: str, sample_size: int = 20):
         writer.writeheader()
         writer.writerows(all_results)'''
 
-
 import sys
 import os
 import csv
@@ -105,29 +104,12 @@ def run_all(model_name: str, sample_size: int = 20):
     if model_name not in MODEL_LOADERS:
         raise ValueError(f"Unsupported model: {model_name}. Choose from {list(MODEL_LOADERS.keys())}")
     
-    # Download and load GSM8K dataset
-    print("Loading GSM8K dataset...")
-    dataset = download_gsm8k_dataset()
-    if dataset is None:
-        print("Failed to load dataset. Exiting.")
-        return
-    
-    # Get the test problems and limit to sample_size
-    problems = dataset['test'][:sample_size]
-    print(f"Using {len(problems)} problems for evaluation")
-    
-    # Load model and tokenizer
+    # Load model and tokenizer (generator returns the tuple)
     print(f"Loading {model_name.upper()} model...")
-    model_components = MODEL_LOADERS[model_name]()
+    generator = MODEL_LOADERS[model_name]()
     
-    # Handle different return formats from model loaders
-    if isinstance(model_components, tuple):
-        model, tokenizer = model_components
-    else:
-        # If only model is returned, you'll need to load tokenizer separately
-        model = model_components
-        # You'll need to implement tokenizer loading based on your model setup
-        raise ValueError("Model loader should return both model and tokenizer")
+    # The generator should return (model, tokenizer) tuple
+    model, tokenizer = generator
     
     # Fix the padding token issue
     if tokenizer.pad_token is None:
@@ -143,13 +125,14 @@ def run_all(model_name: str, sample_size: int = 20):
         print('='*50)
         
         try:
+            # Call evaluate_local_model with the correct signature that matches your function
             df = evaluate_local_model(
-                model=model,
-                tokenizer=tokenizer,
-                problems=problems,
-                sample_size=sample_size,
+                model_name=model_name,
+                generator=generator,
                 strategy_name=strategy_name,
-                prompt_fn=prompt_fn
+                prompt_fn=prompt_fn,
+                num_problems=sample_size,
+                log_incorrect=True
             )
             
             # Add metadata to results
@@ -201,6 +184,13 @@ if __name__ == "__main__":
     print(f"Sample size: {sample_size}")
     print("-" * 50)
     
+    try:
+        run_all(model.lower(), sample_size)
+    except KeyboardInterrupt:
+        print("\n  Evaluation interrupted by user")
+    except Exception as e:
+        print(f"\n Evaluation failed: {str(e)}")
+        raise
     try:
         run_all(model.lower(), sample_size)
     except KeyboardInterrupt:
