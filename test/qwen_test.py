@@ -27,7 +27,7 @@ def test_qwen_model_basic_functionality(model,tokenizer):
         print("\nModel Response:")
         print(output)'''
 
-        if "42" in output:
+        if "42" in reply:
             print("Test Passed: Correct answer found.")
         else:
             print("Test Completed: Response generated but answer may be unclear.")
