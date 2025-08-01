@@ -17,6 +17,7 @@ def load_qwen_quantized():
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
 
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
@@ -25,6 +26,8 @@ def load_qwen_quantized():
         torch_dtype=torch.float16,
         trust_remote_code=True
     )
+
+    model.resize_token_embeddings(len(tokenizer))
 
     # ---- Patch to fix 'past_key_values' crash in Qwen ----
     original_forward = model.forward
