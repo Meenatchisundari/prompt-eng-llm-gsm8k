@@ -49,5 +49,6 @@ def load_qwen_quantized():
     )
 
     print("Qwen model loaded successfully.")
-    return generator
+    return model, tokenizer
+    #return generator
 
