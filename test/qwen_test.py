@@ -2,7 +2,7 @@ exec(open("setup_path.py").read())
 
 from models.qwen_loader import load_qwen_quantized
 
-def test_qwen_model_basic_functionality(text_generator):
+def test_qwen_model_basic_functionality(model,tokenizer):
     """Test Qwen model functionality with a simple math problem."""
     print("Testing Qwen model with a basic math prompt...")
 
