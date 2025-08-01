@@ -8,7 +8,11 @@ import os
 
 def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_problems=5, log_incorrect=True):
     print(f"\nEvaluating {model_name.upper()} on {num_problems} randomly selected GSM8K problems with strategy: {strategy_name}")
+    
+    model, tokenizer = generator
 
+
+    
     dataset = download_gsm8k_dataset()["test"]
     samples = random.sample(list(dataset), num_problems)
     results = []
@@ -24,6 +28,15 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
         prompt = prompt_fn(question)
 
         start = time.time()
+
+        inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+        outputs = model.generate(
+            input_ids=inputs["input_ids"],
+            max_new_tokens=150,
+            temperature=0.1,
+            do_sample=False
+        )
+        
         response = generator(prompt, max_new_tokens=150, temperature=0.1)[0]["generated_text"]
         duration = round(time.time() - start, 2)
         prediction = extract_answer_number(response)
