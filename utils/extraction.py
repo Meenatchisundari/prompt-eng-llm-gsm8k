@@ -1,5 +1,20 @@
 import re
 
 def extract_answer_number(text):
-    match = re.search(r"(?:####|Answer:)?\\s*([+-]?\\d+(?:\\.\\d+)?)", text)
-    return float(match.group(1)) if match else None
+    # Match patterns like '#### 42', 'Answer: 42', 'The answer is 42', etc.
+    patterns = [
+        r"####\s*([+-]?\d+(?:\.\d+)?)",
+        r"[Aa]nswer[:\-]?\s*\$?([+-]?\d+(?:\.\d+)?)",
+        r"[Tt]he answer is\s*\$?([+-]?\d+(?:\.\d+)?)",
+        r"=\s*\$?([+-]?\d+(?:\.\d+)?)"
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return float(match.group(1))
+    
+    # Fallback: pick the last number in the output
+    numbers = re.findall(r"[+-]?\d+(?:\.\d+)?", text)
+    return float(numbers[-1]) if numbers else None
+
