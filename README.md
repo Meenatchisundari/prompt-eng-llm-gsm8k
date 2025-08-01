@@ -33,8 +33,8 @@ prompt-eng-llm-gsm8k/
 │   └── evaluation.py
 │
 ├── test/                     # Model tests
-│   ├── test_llama.py
-│   └── test_qwen.py
+│   ├── llama_test.py
+│   └── qwen_test.py
 │
 ├── setup_env.py              # Hugging Face authentication setup
 ├── setup_path.py             # Root path setup for sys.path
@@ -98,7 +98,7 @@ llama_generator = load_llama2_quantized()
 Or run the test file:
 
 ```bash
-!python test/test_llama.py
+!python test/llama_test.py
 ```
 
 ## Qwen Model Setup and Testing
@@ -120,7 +120,7 @@ qwen_generator = load_qwen_quantized()
 Or run the test file:
 
 ```bash
-!python test/test_qwen.py
+!python test/qwen_test.py
 ```
 
 ## Unified Strategy Evaluation (run_all.py)
