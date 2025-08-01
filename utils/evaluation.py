@@ -29,6 +29,9 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
 
         start = time.time()
 
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
         inputs = tokenizer(prompt, return_tensors="pt" ,padding =True).to(model.device)
         outputs = model.generate(
             input_ids=inputs["input_ids"],
