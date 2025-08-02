@@ -1,9 +1,8 @@
 import dspy
 
 class ZeroShotSignature(dspy.Signature):
-    """Basic QA without CoT."""
-    question = dspy.InputField(desc="A math word problem")
-    answer = dspy.OutputField(desc="Final answer as a number")
+    question = dspy.InputField(desc="Math problem")
+    answer = dspy.OutputField(desc="Answer in format: #### [answer]")
 
 class ZeroShotDSPy(dspy.Module):
     def __init__(self):
