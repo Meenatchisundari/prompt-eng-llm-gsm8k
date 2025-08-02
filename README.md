@@ -46,21 +46,21 @@ This project benchmarks LLaMA-2-7B-Chat and Qwen-7B-Chat models on the GSM8K dat
 ### 1. Clone the Repo
 
 ```bash
-git clone https://github.com/your-org/gsm8k-eval-pipeline.git
-cd gsm8k-eval-pipeline
+!git clone https://github.com/your-org/gsm8k-eval-pipeline.git
+%cd gsm8k-eval-pipeline
 ```
 
 ### 2. Install Requirements
 
 ```bash
-pip install -r requirements.txt
+!pip install -r requirements.txt
 ```
 
 ### 3. Run LLaMA or Qwen Evaluation
 
 ```bash
-python run_all.py llama 20   # for LLaMA-2 (4-bit)
-python run_all.py qwen  20   # for Qwen (float16)
+!python run_all.py llama 20   # for LLaMA-2 (4-bit)
+!python run_all.py qwen  20   # for Qwen (float16)
 ```
 
 ---
@@ -68,8 +68,8 @@ python run_all.py qwen  20   # for Qwen (float16)
 ## 🧪 Test Scripts
 
 ```bash
-python llama_test.py    # Check LLaMA inference sanity
-python qwen_test.py     # Check Qwen output
+!python llama_test.py    # Check LLaMA inference sanity
+!python qwen_test.py     # Check Qwen output
 ```
 
 ---
