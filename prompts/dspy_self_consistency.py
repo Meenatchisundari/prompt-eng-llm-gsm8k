@@ -1,9 +1,9 @@
 import dspy
 
 class SelfConsistencyDSPy(dspy.Module):
-    def __init__(self, n=5):
+    def __init__(self, num_samples=5):
         super().__init__()
-        self.sc = dspy.ChainOfThought(CoTDSPy(), num_generations=n)
+        self.module = dspy.ChainOfThought(CoTDSPy(), num_generations=num_samples)
 
     def forward(self, question):
-        return self.sc(question=question)
+        return self.module(question=question)
