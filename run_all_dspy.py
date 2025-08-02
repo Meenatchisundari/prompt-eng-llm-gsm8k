@@ -17,21 +17,19 @@ from utils.dataset import download_gsm8k_dataset
 from models.llama2_loader import load_llama2_quantized
 from models.qwen_loader import load_qwen_quantized
 
-
-
-
 STRATEGIES = {
-    "zero_shot": ZeroShotDSPy(),
-    "cot": CoTDSPy(),
-    "few_shot": FewShotDSPy(),
-    "self_consistency": SelfConsistencyDSPy(),
-    "prolog": PrologDSPy()
+    "zero_shot": ZeroShotDSPy,
+    "cot": CoTDSPy,
+    "few_shot": FewShotDSPy,
+    "self_consistency": SelfConsistencyDSPy,
+    "prolog": PrologDSPy
 }
 
 MODEL_LOADERS = {
     "llama": load_llama2_quantized,
     "qwen": load_qwen_quantized
 }
+
 def evaluate_dspy(strategy_name, module, dataset):
     results = []
     correct = 0
@@ -74,7 +72,7 @@ def run_all_dspy(model_name, sample_size):
 
     for strategy_name, module in STRATEGIES.items():
         print(f"\n=== Running DSPy: {strategy_name} ===")
-        result = evaluate_dspy(strategy_name, module, generator, data)
+        result = evaluate_dspy(strategy_name, module, data)
         all_results.extend(result)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
