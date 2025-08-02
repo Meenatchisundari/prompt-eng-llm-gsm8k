@@ -18,11 +18,11 @@ from models.llama2_loader import load_llama2_quantized
 from models.qwen_loader import load_qwen_quantized
 
 STRATEGIES = {
-    "zero_shot": ZeroShotDSPy,
-    "cot": CoTDSPy,
-    "few_shot": FewShotDSPy,
-    "self_consistency": SelfConsistencyDSPy,
-    "prolog": PrologDSPy
+    "zero_shot": ZeroShotDSPy(),
+    "cot": CoTDSPy(),
+    "few_shot": FewShotDSPy(),
+    "self_consistency": SelfConsistencyDSPy(),
+    "prolog": PrologDSPy()
 }
 
 MODEL_LOADERS = {
