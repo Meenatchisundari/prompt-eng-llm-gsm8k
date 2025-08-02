@@ -8,7 +8,7 @@ def test_llama_model_basic_functionality(text_generator):
     test_prompt = """<s>[INST] Solve: What is 15 + 27? Show steps. [/INST]"""
 
     try:
-        response = text_generator(test_prompt)
+        response = generator(prompt)
         output = response[0]['generated_text']
         print("\nModel Response:")
         print(output)
