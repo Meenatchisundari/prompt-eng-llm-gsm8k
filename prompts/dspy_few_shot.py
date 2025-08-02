@@ -1,16 +1,24 @@
+import dspy
+
+FEW_SHOT_EXAMPLES = """
+Q: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today?
+A: I start with 15 trees and end with 21 trees. So 21 - 15 = 6. #### 6
+
+Q: Jason had 20 lollipops. He gave Denny some lollipops. Now Jason has 12 lollipops. How many lollipops did Jason give to Denny?
+A: Jason started with 20 and ended with 12. So 20 - 12 = 8. #### 8
+"""
+
 class FewShotDSPy(dspy.Signature):
     question = dspy.InputField()
-    answer = dspy.OutputField(desc="Final answer as #### number.")
+    answer = dspy.OutputField(desc="Final numeric answer in format: #### [answer]")
 
-FEW_SHOT_EXAMPLES = [
-    {"question": "Jason had 20 lollipops. Now he has 12. How many did he give?", "answer": "#### 8"},
-    {"question": "There are 15 trees. Workers plant more and now there are 21. How many were planted?", "answer": "#### 6"},
-]
-
-class FewShotModule(dspy.Predict):
+class FewShotModule(dspy.Module):
     def __init__(self):
         super().__init__()
-        self.program = dspy.Predict(FewShotDSPy).compile(demos=FEW_SHOT_EXAMPLES)
+        self.predict = dspy.Predict(FewShotDSPy)
 
     def forward(self, question):
-        return self.program(question=question)
+        prompt = f"{FEW_SHOT_EXAMPLES}\nQ: {question}\nA:"
+        return self.predict(question=prompt)
+
+FewShotDSPy = FewShotModule()
