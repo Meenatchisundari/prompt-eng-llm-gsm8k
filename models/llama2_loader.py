@@ -15,9 +15,8 @@ def load_llama2_quantized():
     )
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-
+    tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
+    
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         quantization_config=bnb_config,
@@ -32,7 +31,7 @@ def load_llama2_quantized():
         max_new_tokens=200,
         temperature=0.7,
         do_sample=True,
-        pad_token_id=tokenizer.eos_token_id
+        pad_token_id=tokenizer.pad_token_id
     )
 
     print("LLaMA-2 model loaded successfully.")
