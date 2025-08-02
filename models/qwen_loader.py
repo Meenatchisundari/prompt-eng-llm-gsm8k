@@ -14,7 +14,7 @@ def load_qwen_quantized():
 
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
-        quantization_config=bnb_config,
+        trust_remote_code=True,
         device_map="auto",
         torch_dtype=torch.float16,
     )
