@@ -1,19 +1,18 @@
+import os
 import torch
 import dspy
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from huggingface_hub import login
-import os
+
 
 def load_llama2_dspy():
     """
-    Loads the LLaMA-2-7B-chat-hf model with 4-bit quantization,
-    wraps it in DSPy.HFModel and returns the model object.
+    Loads LLaMA-2-7B-chat-hf with 4-bit quantization and wraps it in a DSPy-compatible model.
     """
     print("[DSPy Loader] Loading LLaMA-2-7B-chat-hf for DSPy...")
 
     model_id = "meta-llama/Llama-2-7b-chat-hf"
-    hf_token = os.environ.get("HF_TOKEN", None)
-    
+    hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN", None)
+
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.bfloat16,
@@ -22,22 +21,33 @@ def load_llama2_dspy():
     )
 
     tokenizer = AutoTokenizer.from_pretrained(model_id, token=hf_token)
-    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         device_map="auto",
-        torch_dtype=torch.float16,
         quantization_config=bnb_config,
+        torch_dtype=torch.float16,
         token=hf_token
     )
 
-    dspy_model = dspy.HFModel(
-        model=model,
-        tokenizer=tokenizer,
-        max_tokens=300,
-        temperature=0.1
-    )
+    class LocalHFWrapper(dspy.BaseLM):
+        def __init__(self):
+            super().__init__(model=model)
+            self.model = model
+            self.tokenizer = tokenizer
+            self.max_tokens = 300
+            self.temperature = 0.1
 
-    print("[DSPy Loader] LLaMA-2 model wrapped for DSPy.")
-    return dspy_model
+        def forward(self, prompt, **kwargs):
+            input_ids = self.tokenizer(prompt, return_tensors="pt").input_ids.to("cuda")
+            outputs = self.model.generate(
+                input_ids,
+                do_sample=True,
+                temperature=self.temperature,
+                max_new_tokens=self.max_tokens,
+                pad_token_id=self.tokenizer.pad_token_id
+            )
+            return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    return LocalHFWrapper()
