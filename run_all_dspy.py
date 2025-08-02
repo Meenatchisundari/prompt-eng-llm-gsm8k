@@ -1,5 +1,12 @@
+import sys
+import os
 import csv
+import argparse
+import dspy
 from datetime import datetime
+
+exec(open("setup_path.py").read())
+
 from prompts.dspy_zero_shot import ZeroShotDSPy
 from prompts.dspy_cot import CoTDSPy
 from prompts.dspy_few_shot import FewShotDSPy
@@ -7,9 +14,11 @@ from prompts.dspy_self_consistency import SelfConsistencyDSPy
 from prompts.dspy_prolog import PrologDSPy
 from utils.extraction import extract_answer_number
 from utils.dataset import download_gsm8k_dataset
+from models.llama2_loader import load_llama2_quantized
+from models.qwen_loader import load_qwen_quantized
 
-# Setup OpenAI DSPy LLM (already configured externally)
-import dspy
+
+
 
 STRATEGIES = {
     "zero_shot": ZeroShotDSPy(),
@@ -18,6 +27,10 @@ STRATEGIES = {
     "self_consistency": SelfConsistencyDSPy(),
     "prolog": PrologDSPy()
 }
+
+MODEL_LOADERS = {
+    "llama": load_llama2_quantized,
+    "qwen": load_qwen_quantized
 
 def evaluate_dspy(strategy_name, module, dataset):
     results = []
@@ -50,23 +63,32 @@ def evaluate_dspy(strategy_name, module, dataset):
     print(f"\n{strategy_name} Accuracy: {acc*100:.2f}%")
     return results
 
-def run_all_dspy(sample_size=10):
+def run_all_dspy(model_name, sample_size):
+    if model_name not in MODEL_LOADERS:
+        raise ValueError(f"Invalid model: {model_name}. Choose from {list(MODEL_LOADERS)}")
+
+    generator = MODEL_LOADERS[model_name]()
     data = download_gsm8k_dataset()["test"][:sample_size]
     all_results = []
 
     for strategy_name, module in STRATEGIES.items():
         print(f"\n=== Running DSPy: {strategy_name} ===")
-        result = evaluate_dspy(strategy_name, module, data)
+        result = evaluate_dspy(strategy_name, module, generator, data)
         all_results.extend(result)
 
-    # Save results to CSV
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"results/dspy_results_{sample_size}_{timestamp}.csv"
+    filename = f"results/dspy_results_{model_name}_{sample_size}_{timestamp}.csv"
     with open(filename, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["strategy", "question", "correct_answer", "predicted_answer", "correct"])
         writer.writeheader()
         writer.writerows(all_results)
+
     print(f"\nSaved to {filename}")
 
 if __name__ == "__main__":
-    run_all_dspy(sample_size=10)
+    parser = argparse.ArgumentParser(description="Run DSPy strategies on GSM8K")
+    parser.add_argument("model", type=str, choices=["llama", "qwen"])
+    parser.add_argument("samples", type=int)
+    args = parser.parse_args()
+
+    run_all_dspy(model_name=args.model, sample_size=args.samples)
