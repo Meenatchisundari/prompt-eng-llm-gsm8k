@@ -1,10 +1,23 @@
-torch
-transformers
-accelerate
-bitsandbytes
-numpy
-openai
-huggingface_hub
-datasets
-pandas
 transformers_stream_generator
+# Core deep learning
+torch==2.1.0
+transformers==4.36.2
+accelerate==0.24.0
+bitsandbytes==0.41.0
+
+# Data handling
+pandas==2.1.4
+numpy==1.26.4
+datasets==2.14.0
+requests==2.31.0
+
+# Hugging Face ecosystem
+huggingface_hub==0.20.3
+sentencepiece==0.1.99
+protobuf==4.25.3
+
+# Optional (OpenAI API, if using GPT-4/GPT-3.5 benchmarks)
+openai==1.6.1
+
+# Optional: For streaming generation (if using CoT streaming or token streaming)
+transformers_stream_generator==0.0.4
