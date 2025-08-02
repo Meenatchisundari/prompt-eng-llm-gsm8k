@@ -39,7 +39,7 @@ def evaluate_dspy(strategy_name, module, dataset):
         gt = extract_answer_number(sample['answer'])
 
         try:
-            output = module(question=question)
+            output = module.forward(question=question)
             pred = extract_answer_number(output.answer)
         except Exception as e:
             print(f"[ERROR] Q{i+1} failed: {e}")
