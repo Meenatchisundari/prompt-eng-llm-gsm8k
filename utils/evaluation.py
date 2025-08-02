@@ -25,29 +25,20 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
 
         start = time.time()
 
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
+        try:
+            response = generator(prompt, max_new_tokens=150, temperature=0.1)[0]['generated_text']
+        except Exception as e:
+            print(f" Generation failed on Q{i+1}: {e}")
+            continue
 
-        inputs = tokenizer(prompt, return_tensors="pt" ,padding =True).to(model.device)
-        outputs = model.generate(
-            input_ids=inputs["input_ids"],
-            attention_mask=inputs["attention_mask"],
-            max_new_tokens=150,
-            temperature=0.1,
-            do_sample=False
-        )
-        
-        response = generator(prompt, max_new_tokens=150, temperature=0.1)[0]["generated_text"]
         duration = round(time.time() - start, 2)
         prediction = extract_answer_number(response)
 
-        # logging
         print(f"\nQ{i+1}: {question}")
         print(f"Prompt:\n{prompt}")
-        print(f"Model Output:\n{response.strip()}")
-        print(f"Correct Answer: {correct}")
-        print(f"Predicted Answer: {prediction}")
-        print(f" Time Taken: {duration} sec")
+        print(f"Response:\n{response.strip()}")
+        print(f"Expected: {correct}, Predicted: {prediction}")
+        print(f"Time Taken: {duration} sec")
         print("-" * 80)
 
         is_correct = prediction == correct
@@ -61,7 +52,6 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
             "time_taken": duration
         })
 
-        #  Optional: Log incorrect
         if log_incorrect and not is_correct:
             with open(incorrect_log_path, "a") as f:
                 f.write(f"\nQ{i+1}: {question}\n")
@@ -71,5 +61,4 @@ def evaluate_local_model(model_name, generator, strategy_name, prompt_fn, num_pr
                 f.write("-" * 80 + "\n")
 
     return pd.DataFrame(results)
-
-
+        
