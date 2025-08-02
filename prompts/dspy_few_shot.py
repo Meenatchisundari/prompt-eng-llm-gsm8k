@@ -1,16 +1,13 @@
 import dspy
 
-class FewShotSignature(dspy.Signature):
-    question = dspy.InputField(desc="A math problem")
-    answer = dspy.OutputField(desc="Answer with final number")
+class CoTSignature(dspy.Signature):
+    question = dspy.InputField(desc="Math problem")
+    answer = dspy.OutputField(desc="Reasoned answer ending with #### [answer]")
 
-class FewShotDSPy(dspy.Module):
+class CoTDSPy(dspy.Module):
     def __init__(self):
         super().__init__()
-        self.predict = dspy.Predict(FewShotSignature, demos=[
-            FewShotSignature(question="Alice had 10 apples and ate 3. How many are left?", answer="#### 7"),
-            FewShotSignature(question="John bought 4 pens and then 2 more. How many total?", answer="#### 6")
-        ])
+        self.predict = dspy.Predict(CoTSignature)
 
     def forward(self, question):
         return self.predict(question=question)
