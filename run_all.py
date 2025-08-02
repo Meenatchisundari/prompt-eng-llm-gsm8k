@@ -1,6 +1,7 @@
 import sys
 import os
 import csv
+import argparse
 from datetime import datetime
 
 exec(open("setup_path.py").read())
@@ -64,8 +65,6 @@ def run_all(model_name: str, sample_size: int = 20):
     print(f"\n All strategies completed. Results saved to: {filename}")
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(description="Run GSM8K evaluation on a selected model.")
     parser.add_argument("model", type=str, help="Model name: one of [llama, qwen]")
     parser.add_argument("samples", type=int, help="Number of GSM8K problems to evaluate")
