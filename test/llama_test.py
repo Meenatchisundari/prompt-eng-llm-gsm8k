@@ -5,7 +5,7 @@ def test_llama_model_basic_functionality(text_generator):
     """Test LLaMA model functionality with a simple math problem."""
     print("Testing LLaMA-2 model with a basic math prompt...")
 
-    test_prompt = """<s>[INST] Solve: What is 15 + 27? Show steps. [/INST]"""
+    prompt = """<s>[INST] Solve: What is 15 + 27? Show steps. [/INST]"""
 
     try:
         response = generator(prompt)
