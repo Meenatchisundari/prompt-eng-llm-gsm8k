@@ -1,10 +1,11 @@
 import dspy
 
 class ZeroShotSignature(dspy.Signature):
-    question = dspy.InputField()
-    answer = dspy.OutputField()
+    """Basic QA without CoT."""
+    question = dspy.InputField(desc="A math word problem")
+    answer = dspy.OutputField(desc="Final answer as a number")
 
-class ZeroShotModule(dspy.Module):
+class ZeroShotDSPy(dspy.Module):
     def __init__(self):
         super().__init__()
         self.predict = dspy.Predict(ZeroShotSignature)
