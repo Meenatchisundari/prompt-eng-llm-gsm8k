@@ -20,3 +20,6 @@ openai==1.6.1
 
 # Optional: For streaming generation (if using CoT streaming or token streaming)
 transformers_stream_generator==0.0.4
+
+git+https://github.com/stanfordnlp/dspy
+
