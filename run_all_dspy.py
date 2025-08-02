@@ -12,14 +12,14 @@ from prompts.dspy_cot import CoTDSPy
 from prompts.dspy_few_shot import FewShotDSPy
 from prompts.dspy_self_consistency import SelfConsistencyDSPy
 from prompts.dspy_prolog import PrologDSPy
-
 from utils.extraction import extract_answer_number
 from utils.dataset import download_gsm8k_dataset
-from models.llama2_loader import load_llama2_quantized
-from models.qwen_loader import load_qwen_quantized
 
-# Register DSPy Modules (as classes, not instances)
-STRATEGIES = {
+from models.llama2_dspy_loader import load_llama2_dspy
+from models.qwen_dspy_loader import load_qwen_dspy
+
+
+STRATEGY_CLASSES = {
     "zero_shot": ZeroShotDSPy,
     "cot": CoTDSPy,
     "few_shot": FewShotDSPy,
@@ -28,13 +28,16 @@ STRATEGIES = {
 }
 
 MODEL_LOADERS = {
-    "llama": load_llama2_quantized,
-    "qwen": load_qwen_quantized
+    "llama": load_llama2_dspy,
+    "qwen": load_qwen_dspy
 }
 
-def evaluate_dspy(strategy_name, module, dataset):
+
+def evaluate_dspy(strategy_name, module_class, dataset):
     results = []
     correct = 0
+
+    module = module_class()
 
     for i, sample in enumerate(dataset):
         question = sample['question']
@@ -59,39 +62,43 @@ def evaluate_dspy(strategy_name, module, dataset):
 
         print(f"\nQ{i+1}: {question}\nPredicted: {pred}, GT: {gt}, Correct: {is_correct}")
 
-    if len(results) == 0:
+    if results:
+        acc = correct / len(results)
+        print(f"\n{strategy_name} Accuracy: {acc * 100:.2f}%")
+    else:
         print(f"[FATAL] No valid predictions for {strategy_name}.")
-        return results
-
-    acc = correct / len(results)
-    print(f"\n{strategy_name} Accuracy: {acc*100:.2f}%")
     return results
+
 
 def run_all_dspy(model_name, sample_size):
     if model_name not in MODEL_LOADERS:
         raise ValueError(f"Invalid model: {model_name}. Choose from {list(MODEL_LOADERS)}")
 
-    generator = MODEL_LOADERS[model_name]()
-    dspy.configure(lm=generator)  # Configure global DSPy LLM
+    # Load DSPy-compatible LM
+    lm = MODEL_LOADERS[model_name]()
+    dspy.configure(lm=lm)
 
+    # Dataset
     data = download_gsm8k_dataset()["test"][:sample_size]
     all_results = []
 
-    for strategy_name, module_class in STRATEGIES.items():
+    # Run all strategies
+    for strategy_name, module_class in STRATEGY_CLASSES.items():
         print(f"\n=== Running DSPy: {strategy_name} ===")
-        module = module_class()
-        result = evaluate_dspy(strategy_name, module, data)
+        result = evaluate_dspy(strategy_name, module_class, data)
         all_results.extend(result)
 
+    # Save
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    os.makedirs("results", exist_ok=True)
     filename = f"results/dspy_results_{model_name}_{sample_size}_{timestamp}.csv"
+    os.makedirs("results", exist_ok=True)
     with open(filename, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["strategy", "question", "correct_answer", "predicted_answer", "correct"])
         writer.writeheader()
         writer.writerows(all_results)
 
-    print(f"\n Results saved to: {filename}")
+    print(f"\nSaved to {filename}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run DSPy strategies on GSM8K")
