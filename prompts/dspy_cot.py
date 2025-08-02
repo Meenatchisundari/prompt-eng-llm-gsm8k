@@ -1,9 +1,8 @@
 import dspy
 
 class CoTSignature(dspy.Signature):
-    """Reasoning before answer."""
-    question = dspy.InputField(desc="A math word problem")
-    answer = dspy.OutputField(desc="Answer with reasoning and final result")
+    question = dspy.InputField(desc="Math problem")
+    answer = dspy.OutputField(desc="Reasoned answer ending with #### [answer]")
 
 class CoTDSPy(dspy.Module):
     def __init__(self):
