@@ -22,4 +22,5 @@ openai
 transformers_stream_generator
 
 # Latest DSPy (dev branch)
+dspy
 git+https://github.com/stanfordnlp/dspy
