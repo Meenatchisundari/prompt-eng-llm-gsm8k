@@ -1,22 +1,13 @@
 import dspy
 
-class PrologDSPy(dspy.Signature):
-    question = dspy.InputField()
-    answer = dspy.OutputField(desc="Final numeric answer using logic: #### [answer]")
+class PrologSignature(dspy.Signature):
+    question = dspy.InputField(desc="Math word problem to convert into logic facts")
+    answer = dspy.OutputField(desc="Facts, rules, query, and answer reasoning")
 
-class PrologModule(dspy.Module):
+class PrologDSPy(dspy.Module):
     def __init__(self):
         super().__init__()
-        self.predict = dspy.Predict(PrologDSPy)
+        self.predict = dspy.Predict(PrologSignature)
 
     def forward(self, question):
-        prompt = f"""% Solve using logical reasoning and facts
-% Problem: {question}
-
-% Facts (extract given information):
-% Rules (define relationships):
-% Query (what we need to find):
-% Answer:"""
-        return self.predict(question=prompt)
-
-PrologDSPy = PrologModule()
+        return self.predict(question=question)
