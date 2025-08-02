@@ -15,11 +15,8 @@ def load_qwen_quantized():
     )
 
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+    tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token or "[PAD]"
     
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-       
-
     
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -30,20 +27,6 @@ def load_qwen_quantized():
         trust_remote_code=True
     )
 
-    model.resize_token_embeddings(len(tokenizer))
-
-    # ---- Patch to fix 'past_key_values' crash in Qwen ----
-    original_forward = model.forward
-
-    def patched_forward(*args, **kwargs):
-        if 'past_key_values' in kwargs and kwargs['past_key_values'] is None:
-            kwargs.pop('past_key_values')
-        return original_forward(*args, **kwargs)
-
-    model.forward = patched_forward
-    # ------------------------------------------------------
-
-
     generator = pipeline(
         "text-generation",
         model=model,
@@ -51,10 +34,8 @@ def load_qwen_quantized():
         max_new_tokens=200,
         temperature=0.7,
         do_sample=True,
-        pad_token_id=tokenizer.eos_token_id
+        pad_token_id=tokenizer.pad_token_id
     )
 
     print("Qwen model loaded successfully.")
-    return model, tokenizer
-    #return generator
-
+    return generator
