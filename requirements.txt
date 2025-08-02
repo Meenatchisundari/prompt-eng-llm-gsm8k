@@ -1,25 +1,25 @@
 # Core deep learning
-torch==2.1.0
-transformers==4.36.2
-accelerate==0.24.0
-bitsandbytes==0.41.0
+torch
+transformers
+accelerate
+bitsandbytes
 
 # Data handling
-pandas==2.1.4
-numpy==1.26.4
-datasets==2.14.0
-requests==2.31.0
+pandas
+numpy
+datasets
+requests
 
 # Hugging Face ecosystem
-huggingface_hub==0.20.3
-sentencepiece==0.1.99
-protobuf==4.25.3
+huggingface_hub
+sentencepiece
+protobuf
 
-# Optional (OpenAI API, if using GPT-4/GPT-3.5 benchmarks)
-openai==1.6.1
+# Optional: OpenAI API
+openai
 
-# Optional: For streaming generation (if using CoT streaming or token streaming)
-transformers_stream_generator==0.0.4
+# Optional: for CoT or token streaming
+transformers_stream_generator
 
+# Latest DSPy (dev branch)
 git+https://github.com/stanfordnlp/dspy
-
