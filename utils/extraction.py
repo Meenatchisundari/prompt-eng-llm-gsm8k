@@ -14,7 +14,7 @@ def extract_answer_number(text):
         if match:
             return float(match.group(1))
     
-    # Fallback: pick the last number in the output
+   
     numbers = re.findall(r"[+-]?\d+(?:\.\d+)?", text)
     return float(numbers[-1]) if numbers else None
 
