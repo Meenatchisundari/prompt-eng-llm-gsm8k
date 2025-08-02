@@ -7,16 +7,9 @@ def load_qwen_quantized():
 
     model_id = "Qwen/Qwen-7B-Chat"
 
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16
-    )
-
+    
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token or "[PAD]"
-    
     
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -24,7 +17,6 @@ def load_qwen_quantized():
         quantization_config=bnb_config,
         device_map="auto",
         torch_dtype=torch.float16,
-        trust_remote_code=True
     )
 
     generator = pipeline(
