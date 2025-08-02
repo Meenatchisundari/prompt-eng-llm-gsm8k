@@ -60,4 +60,16 @@ def run_all(model_name: str, sample_size: int = 20):
         writer = csv.DictWriter(f, fieldnames=["model", "strategy", "question", "correct_answer", "predicted_answer", "correct", "time_taken"])
         writer.writeheader()
         writer.writerows(all_results)
+    
+    print(f"\n All strategies completed. Results saved to: {filename}")
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run GSM8K evaluation on a selected model.")
+    parser.add_argument("model", type=str, help="Model name: one of [llama, qwen]")
+    parser.add_argument("samples", type=int, help="Number of GSM8K problems to evaluate")
+
+    args = parser.parse_args()
+    run_all(model_name=args.model.lower(), sample_size=args.samples)
 
