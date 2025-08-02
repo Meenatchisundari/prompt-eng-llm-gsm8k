@@ -1,13 +1,12 @@
-import dspy
-
-class GSM8KSignature(dspy.Signature):
+class ZeroShotDSPy(dspy.Signature):
+    """Predict answer with no examples."""
     question = dspy.InputField()
-    answer = dspy.OutputField(desc="Final numeric answer in format: #### [answer]")
+    answer = dspy.OutputField(desc="Final answer as #### number.")
 
-class ZeroShotDSPy(dspy.Module):
+class ZeroShotModule(dspy.Predict):
     def __init__(self):
         super().__init__()
-        self.predict = dspy.Predict(GSM8KSignature)
+        self.zero = dspy.ChainOfThought(ZeroShotDSPy)
 
     def forward(self, question):
-        return self.predict(question=question)
+        return self.zero(question=question)
