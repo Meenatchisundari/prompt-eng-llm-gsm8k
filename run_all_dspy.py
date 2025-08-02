@@ -68,6 +68,7 @@ def run_all_dspy(model_name, sample_size):
         raise ValueError(f"Invalid model: {model_name}. Choose from {list(MODEL_LOADERS)}")
 
     generator = MODEL_LOADERS[model_name]()
+    dspy.configure(lm=generator)
     data = download_gsm8k_dataset()["test"][:sample_size]
     all_results = []
 
@@ -77,6 +78,7 @@ def run_all_dspy(model_name, sample_size):
         all_results.extend(result)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    os.makedirs("results", exist_ok=True)
     filename = f"results/dspy_results_{model_name}_{sample_size}_{timestamp}.csv"
     with open(filename, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["strategy", "question", "correct_answer", "predicted_answer", "correct"])
