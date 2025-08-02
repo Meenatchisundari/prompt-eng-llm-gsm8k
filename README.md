@@ -54,6 +54,7 @@ This project benchmarks LLaMA-2-7B-Chat and Qwen-7B-Chat models on the GSM8K dat
 
 ```bash
 !pip install -r requirements.txt
+!python setup_path.py
 ```
 
 ### 3. Run LLaMA or Qwen Evaluation
