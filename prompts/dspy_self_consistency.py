@@ -1,9 +1,18 @@
 import dspy
 
-class SelfConsistencyDSPy(dspy.Module):
-    def __init__(self, num_samples=5):
+class SelfConsistencySignature(dspy.Signature):
+    question = dspy.InputField(desc="Math problem requiring step-by-step reasoning")
+    answer = dspy.OutputField(desc="Final numeric answer in format #### [answer]")
+
+class SelfConsistencyModule(dspy.Module):
+    def __init__(self):
         super().__init__()
-        self.module = dspy.ChainOfThought(CoTDSPy(), num_generations=num_samples)
+        self.predict = dspy.Predict(SelfConsistencySignature)
 
     def forward(self, question):
-        return self.module(question=question)
+        prompt = (
+            f"Solve this math problem step by step, showing your reasoning clearly.\n\n"
+            f"Problem: {question}\n\n"
+            f"Let me work through this step by step:"
+        )
+        return self.predict(question=prompt)
