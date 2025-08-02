@@ -31,7 +31,7 @@ STRATEGIES = {
 MODEL_LOADERS = {
     "llama": load_llama2_quantized,
     "qwen": load_qwen_quantized
-
+}
 def evaluate_dspy(strategy_name, module, dataset):
     results = []
     correct = 0
