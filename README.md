@@ -83,6 +83,8 @@ See `requirements.txt` — includes:
 * pandas, numpy, requests, datasets
 * openai (optional)
 * sentencepiece, protobuf (for tokenizer safety)
+* DSPy support for automated prompt optimization (Zero-Shot, CoT, Few-Shot)
+
 
 ---
 
