@@ -3,6 +3,7 @@ import os
 import csv
 import argparse
 import dspy
+import random
 from datetime import datetime
 
 exec(open("setup_path.py").read())
@@ -11,39 +12,47 @@ from prompts.dspy_zero_shot import ZeroShotModule
 from prompts.dspy_cot import CoTModule
 from prompts.dspy_few_shot import FewShotModule
 from prompts.dspy_prolog import PrologModule
+from prompts.dspy_self_consistency import SelfConsistencyModule
+
 from utils.extraction import extract_answer_number
 from utils.dataset import download_gsm8k_dataset
 from models.llama2_dspy_loader import load_llama2_dspy
 from models.qwen_dspy_loader import load_qwen_dspy
 
 
-# Strategy mapping
 STRATEGIES = {
     "zero_shot": ZeroShotModule,
     "cot": CoTModule,
     "few_shot": FewShotModule,
-    "prolog": PrologModule
+    "prolog": PrologModule,
+    "self_consistency": SelfConsistencyModule,
 }
 
-# Model loader mapping
 MODEL_LOADERS = {
     "llama": load_llama2_dspy,
-    "qwen": load_qwen_dspy
+    "qwen": load_qwen_dspy,
 }
 
 
-def evaluate_dspy(strategy_name, module_class, dataset):
+def evaluate_dspy(strategy_name, module_class, dataset, samples=1):
     results = []
     correct = 0
-
     module = module_class()
+
     for i, sample in enumerate(dataset):
         question = sample["question"]
         gt = extract_answer_number(sample["answer"])
 
         try:
-            output = module(question=question)
-            pred = extract_answer_number(output.answer)
+            if strategy_name == "self_consistency":
+                answers = []
+                for _ in range(samples):
+                    response = module(question=question).answer
+                    answers.append(extract_answer_number(response))
+                pred = max(set(answers), key=answers.count) if answers else None
+            else:
+                response = module(question=question).answer
+                pred = extract_answer_number(response)
         except Exception as e:
             print(f"[ERROR] Q{i+1}: {e}")
             continue
@@ -64,7 +73,7 @@ def evaluate_dspy(strategy_name, module_class, dataset):
         acc = correct / len(results)
         print(f"\n {strategy_name} Accuracy: {acc*100:.2f}%")
     else:
-        print(f"\n [FATAL] No valid predictions for {strategy_name}")
+        print(f"\n No valid predictions for {strategy_name}")
     return results
 
 
@@ -72,28 +81,28 @@ def run_all_dspy(model_name, sample_size):
     if model_name not in MODEL_LOADERS:
         raise ValueError(f"Invalid model: {model_name}. Choose from {list(MODEL_LOADERS)}")
 
-    # Load local model wrapped in DSPy BaseLM
     lm = MODEL_LOADERS[model_name]()
     dspy.configure(lm=lm)
 
-    # Load dataset
-    data = download_gsm8k_dataset()["test"][:sample_size]
+    dataset = download_gsm8k_dataset()["test"]
+    samples = random.sample(dataset, sample_size)
     all_results = []
 
-    for strategy_name, module_class in STRATEGIES.items():
-        print(f"\n=== Running DSPy: {strategy_name} ===")
-        result = evaluate_dspy(strategy_name, module_class, data)
+    for name, module_class in STRATEGIES.items():
+        print(f"\n=== Running DSPy: {name} ===")
+        result = evaluate_dspy(name, module_class, samples, samples=5 if name == "self_consistency" else 1)
         all_results.extend(result)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     os.makedirs("results", exist_ok=True)
-    filename = f"results/dspy_results_{model_name}_{sample_size}_{timestamp}.csv"
-    with open(filename, "w", newline="") as f:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_path = f"results/dspy_results_{model_name}_{sample_size}_{timestamp}.csv"
+
+    with open(output_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["strategy", "question", "correct_answer", "predicted_answer", "correct"])
         writer.writeheader()
         writer.writerows(all_results)
 
-    print(f"\n Saved results to: {filename}")
+    print(f"\n Results saved to: {output_path}")
 
 
 if __name__ == "__main__":
@@ -102,4 +111,4 @@ if __name__ == "__main__":
     parser.add_argument("samples", type=int)
     args = parser.parse_args()
 
-    run_all_dspy(model_name=args.model, sample_size=args.samples)
+    run_all_dspy(args.model, args.samples)
